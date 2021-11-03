@@ -23,7 +23,7 @@ menu.toggle(menu.my_root(), "UI demo", {"UIdemo"}, "epic UI demo",
             if PAD.IS_CONTROL_JUST_PRESSED(2, 29) then
                 myUI.toggle_cursor_mode()
             end
--- #region window 1
+-- [[#region window 1
             myUI.begin("demo window",0.05, 0.1, "qwertyuiop")
             myUI.subhead("Player pos:")
             myUI.start_horizontal()

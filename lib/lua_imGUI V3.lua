@@ -393,20 +393,25 @@ UI.new = function()
     end
 
     self.finish_tab_container = function ()
+        --determine if we use calculated height or largest height
         if current_window.height < current_window.largest_height then
             current_window.height = current_window.largest_height
         else
             current_window.largest_height = current_window.height
         end
-        local width = current_window.tabs_collapsed == true and 0.016 or 0.061
+        --calculate width + tabs
+        local tab_width = current_window.tabs_collapsed == true and 0.016 or 0.061
+        -- draw border
         directx.draw_rect(
-            temp_x - 0.005 - width,
-            temp_y - 0.005,
-            current_window.width + width + 0.01,
-            current_window.height + 0.01,
+            temp_x - 0.005 - tab_width,
+            temp_y - 0.005 - 0.03,
+            current_window.width + tab_width + 0.01,
+            current_window.height + 0.04,
             highlight_colour
         )
+        --draw tabs
         draw_tabs(#tabs)
+        -- draw background
         directx.draw_rect(
             temp_x - 0.004,
             temp_y - 0.004,
@@ -414,11 +419,12 @@ UI.new = function()
             current_window.height + 0.008,
             background_colour
         )
-        directx.draw_rect(temp_x - 0.004, temp_y - 0.004, current_window.width + 0.008, 0.03, gray_colour)
+        --draw title bar
+        directx.draw_rect(temp_x - tab_width - 0.004, temp_y - 0.004 - 0.03, current_window.width + tab_width + 0.008, 0.03, gray_colour)
 
         directx.draw_text(
-            temp_x + current_window.width * 0.5,
-            temp_y,
+            temp_x + current_window.width  * 0.5,
+            temp_y - 0.03,
             current_window.title,
             ALIGN_TOP_CENTRE,
             .6,
@@ -427,7 +433,7 @@ UI.new = function()
         )
 
         if cursor_mode then
-            if get_overlap_with_rect(current_window.width + 0.008, 0.03, temp_x, temp_y, cursor_pos) then
+            if get_overlap_with_rect(current_window.width + tab_width + 0.008, 0.03, temp_x - tab_width - 0.004, temp_y - 0.004 - 0.03, cursor_pos) then
                 if PAD.IS_CONTROL_JUST_PRESSED(2, 18) then
                     current_window.is_being_dragged = true
                 end
@@ -437,8 +443,8 @@ UI.new = function()
             end
 
             if current_window.is_being_dragged then
-                current_window.x = cursor_pos.x - current_window.width * 0.5
-                current_window.y = cursor_pos.y - 0.03 * 0.5
+                current_window.x = cursor_pos.x - (current_window.width - tab_width) * 0.5
+                current_window.y = cursor_pos.y + 0.004 + 0.015
             end
         end
 
