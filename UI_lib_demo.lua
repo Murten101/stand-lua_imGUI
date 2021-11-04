@@ -3,8 +3,8 @@ require("lua_imGUI V3")
 
 myUI = UI.new()
 
-local icon_self = directx.create_texture(filesystem.scripts_dir() .. "\\resources\\" .. "demo_self.png")
-local icon_world = directx.create_texture(filesystem.scripts_dir() .. "\\resources\\" .. "demo_world.png")
+local icon_self = directx.create_texture(filesystem.resources_dir() .. "demo_self.png")
+local icon_world = directx.create_texture(filesystem.resources_dir() .. "demo_world.png")
 local icons = {
     self = icon_self,
     world = icon_world
@@ -72,18 +72,11 @@ menu.toggle(menu.my_root(), "UI demo", {"UIdemo"}, "epic UI demo",
                     myUI.start_horizontal()
         
                     god_mode = myUI.toggle("god mode", god_mode, nil, function (state)
-                        if state then
-                            menu.trigger_commands("god on")
-                        else
-                            menu.trigger_commands("god off")
-                        end
+                                menu.trigger_commands(state and "god on" or "god off")
                     end)
+
                     rapid_fire = myUI.toggle("rapid fire", rapid_fire, nil, function (state)
-                        if state then
-                            menu.trigger_commands("rapidfire on")
-                        else
-                            menu.trigger_commands("rapidfire off")
-                        end
+                                menu.trigger_commands(state and "rapidfire on" or "rapidfire off")
                     end)
         
                     myUI.end_horizontal()
