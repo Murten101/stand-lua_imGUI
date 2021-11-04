@@ -3,8 +3,8 @@ require("lua_imGUI V3")
 
 myUI = UI.new()
 
-local icon_self = directx.create_texture(filesystem.scripts_dir() .. "\\resources\\" .. "imGUI_self.png")
-local icon_world = directx.create_texture(filesystem.scripts_dir() .. "\\resources\\" .. "imGUI_world.png")
+local icon_self = directx.create_texture(filesystem.scripts_dir() .. "\\resources\\" .. "demo_self.png")
+local icon_world = directx.create_texture(filesystem.scripts_dir() .. "\\resources\\" .. "demo_world.png")
 local icons = {
     self = icon_self,
     world = icon_world
