@@ -2,11 +2,25 @@ require("natives-1627063482") -- da natives
 
 UI = {}
 
+local container = {
+    new = function ()
+        return {    
+        type = 'C',
+        elements = {},
+        width = 0,
+        height = 0,
+        func = function ()
+            error("func not implemented", 2)
+        end}
+    end
+
+}
+
 UI.new = function()
     -- PRIVATE VARIABLES
     local self = {}
 
-    background_colour = {
+    local background_colour = {
         ["r"] = 0.1,
         ["g"] = 0.1,
         ["b"] = 0.1,
@@ -14,7 +28,7 @@ UI.new = function()
     }
 
     --gray colour for the header
-    gray_colour = {
+    local gray_colour = {
         ["r"] = 0.2,
         ["g"] = 0.2,
         ["b"] = 0.2,
@@ -22,22 +36,22 @@ UI.new = function()
     }
 
     -- text colour
-    text_colour = {
+    local text_colour = {
         ["r"] = 1.0,
         ["g"] = 1.0,
         ["b"] = 1.0,
         ["a"] = 1.0
     }
 
-    highlight_colour = {
+    local highlight_colour = {
         ["r"] = 1.0,
         ["g"] = 0.0,
         ["b"] = 1.0,
         ["a"] = 1
     }
 
-    local cursor_texture = directx.create_texture(filesystem.scripts_dir() .. "\\resources\\" .. "imGUI_cursor.png")
-    local checkmark_texture = directx.create_texture(filesystem.scripts_dir() .. "\\resources\\" .. "imGUI_checkmark.png")
+    local cursor_texture = directx.create_texture(filesystem.resources_dir() .. "imGUI_cursor.png")
+    local checkmark_texture = directx.create_texture(filesystem.resources_dir() .. "imGUI_checkmark.png")
 
     local plain_text_size = 0.5
     local subhead_text_size = 0.6
@@ -101,9 +115,7 @@ UI.new = function()
 
     local function draw_tabs(tab_count)
         local aspect_ratio = get_aspect_ratio()
-        
-        if not current_window.tabs_collapsed then
-            local button_size = {x = 0.06, y = 0.015}
+            local button_size = current_window.tabs_collapsed and {x = 0.015, y = 0.015} or {x = 0.06, y = 0.015}
             if aspect_ratio >= 1 then
                 button_size.y = button_size.y * aspect_ratio
             else
@@ -112,12 +124,13 @@ UI.new = function()
             local drawpos = {x = current_window.x - button_size.x - 0.005, y = current_window.y - 0.004}
             directx.draw_rect(drawpos.x, drawpos.y, button_size.x, current_window.height + 0.008, background_colour)
             directx.draw_rect(drawpos.x, drawpos.y, button_size.x, button_size.y - 0.002, gray_colour)
-            if draw_collapse_button(drawpos.x + 0.0075, drawpos.y + button_size.y *0.5, 1.25, 1) then
-                current_window.tabs_collapsed = true
+            if draw_collapse_button(drawpos.x + 0.0075, drawpos.y + button_size.y *0.5 - 0.03, 1.25, current_window.tabs_collapsed and -1 or 1) then
+                current_window.tabs_collapsed = not current_window.tabs_collapsed
             end
-            directx.draw_text(drawpos.x + button_size.x * 0.5,current_window.y + button_size.y * 0.5 - 0.004, "tabs", ALIGN_CENTRE, 0.5, text_colour)
+            
+
                 for i = 1, tab_count, 1 do
-                    local button_drawpos = {x = drawpos.x, y = drawpos.y + (i) * button_size.y}
+                    local button_drawpos = {x = drawpos.x, y = drawpos.y + (i - 1) * button_size.y}
                     if cursor_mode then
                         if get_overlap_with_rect( button_size.x, button_size.y, button_drawpos.x, button_drawpos.y, cursor_pos) then
                             directx.draw_rect(button_drawpos.x, button_drawpos.y, button_size.x, button_size.y, highlight_colour)
@@ -130,41 +143,14 @@ UI.new = function()
                     else
                         directx.draw_rect(button_drawpos.x, button_drawpos.y, button_size.x, button_size.y, gray_colour)
                     end
-                    directx.draw_texture(tabs[i].data.icon, button_size.x * 0.1, button_size.x * 0.1, -0.1, 0.5, button_drawpos.x, button_drawpos.y + button_size.y * 0.5, 0, text_colour)
-                    directx.draw_text(button_drawpos.x + (button_size.x * 0.1) * 2, button_drawpos.y + button_size.y * 0.5, tabs[i].data.title, ALIGN_CENTRE_LEFT, 0.5, text_colour, false)
-                end
-            else
-                local button_size = {x = 0.015, y = 0.015}
-                if aspect_ratio >= 1 then
-                    button_size.y = button_size.y * aspect_ratio
-                else
-                    button_size.x = button_size.x * aspect_ratio
-                end
-                local drawpos = {x = current_window.x - button_size.x - 0.005, y = current_window.y - 0.004}
-                directx.draw_rect(drawpos.x, drawpos.y, button_size.x, current_window.height + 0.008, background_colour)
-                directx.draw_rect(drawpos.x, drawpos.y, button_size.x, button_size.y - 0.002, gray_colour)
-                if draw_collapse_button(drawpos.x + 0.0075, drawpos.y + button_size.y * 0.5, 1.25, -1) then
-                    current_window.tabs_collapsed = false
-                end
-                    for i = 1, tab_count, 1 do
-                        local button_drawpos = {x = drawpos.x, y = drawpos.y + (i) * button_size.y}
-                        if cursor_mode then
-                            if get_overlap_with_rect( button_size.x, button_size.y, button_drawpos.x, button_drawpos.y, cursor_pos) then
-                                directx.draw_rect(button_drawpos.x, button_drawpos.y, button_size.x, button_size.y, highlight_colour)
-                                if PAD.IS_CONTROL_JUST_PRESSED(2, 18) then
-                                    current_window.current_tab = i
-                                end
-                            else
-                                directx.draw_rect(button_drawpos.x, button_drawpos.y, button_size.x, button_size.y, gray_colour)
-                            end 
-                        else
-                            directx.draw_rect(button_drawpos.x, button_drawpos.y, button_size.x, button_size.y, gray_colour)
-                        end
-                        directx.draw_texture(tabs[i].data.icon, button_size.x * 0.4, button_size.x * 0.4, -0.1, 0.5, button_drawpos.x, button_drawpos.y + button_size.y * 0.5, 0, text_colour)
+                    directx.draw_texture(current_window.tabs[i].data.icon, 0.006, 0.006, -0.1, 0.5, button_drawpos.x, button_drawpos.y + button_size.y * 0.5, 0, text_colour)
+                    if not current_window.tabs_collapsed then
+                        directx.draw_text(button_drawpos.x + (button_size.x * 0.1) * 2, button_drawpos.y + button_size.y * 0.5, current_window.tabs[i].data.title, ALIGN_CENTRE_LEFT, 0.5, text_colour, false)
                     end
-        end
-
-
+                end
+                if not current_window.tabs_collapsed then
+                    directx.draw_text(drawpos.x + button_size.x * 0.5,current_window.y + button_size.y * 0.5 - 0.034, "tabs", ALIGN_CENTRE, 0.5, text_colour)
+                end
     end
 
     local function add_with_and_height(width, height, horizontal)
@@ -182,9 +168,15 @@ UI.new = function()
     end
 
     local function draw_container(container)
-        for index, data in pairs(container) do
-            local type = next(data)
-            type(data[type])
+        for index, element in pairs(container.elements) do
+            local type = element.type
+            if type == 'E' then
+                element.func(element.data)
+            else if type == 'C' then
+                element.func(element)
+            end
+            end
+
         end
     end
 
@@ -358,15 +350,12 @@ UI.new = function()
         if tab_containers[hash] ~= nil then
             current_window = tab_containers[hash]
             current_window.open_containers = {}
-            current_window.elements = {}
-            current_window.active_container = {}
+            current_window.active_container = container.new()
             current_window.horizontal = false
             current_window.height = sizey + 0.02
+            current_window.tabs = tabs
             temp_y = current_window.y
             temp_x = current_window.x
-
-            
-
         else
             current_window ={
                 x = x_pos,
@@ -377,17 +366,18 @@ UI.new = function()
                 title = title,
                 horizontal = false,
                 open_containers = {},
-                elements = {},
-                active_container = {},
+                active_container = container.new(),
                 is_being_dragged = false,
                 tabs_collapsed = false,
                 id = hash,
-                current_tab = 1
+                current_tab = 1,
+                tabs = tabs
             }
             tab_containers[hash] = current_window
         end
-        current_window.active_container = current_window.elements
-        tabs[current_window.current_tab].content()
+        temp_y = temp_y - 0.03
+        current_window.tabs[current_window.current_tab].content()
+        temp_y = temp_y + 0.03
 
         self.finish_tab_container()
     end
@@ -409,8 +399,7 @@ UI.new = function()
             current_window.height + 0.04,
             highlight_colour
         )
-        --draw tabs
-        draw_tabs(#tabs)
+
         -- draw background
         directx.draw_rect(
             temp_x - 0.004,
@@ -421,6 +410,9 @@ UI.new = function()
         )
         --draw title bar
         directx.draw_rect(temp_x - tab_width - 0.004, temp_y - 0.004 - 0.03, current_window.width + tab_width + 0.008, 0.03, gray_colour)
+
+                --draw tabs
+                draw_tabs(#current_window.tabs)
 
         directx.draw_text(
             temp_x + current_window.width  * 0.5,
@@ -433,7 +425,7 @@ UI.new = function()
         )
 
         if cursor_mode then
-            if get_overlap_with_rect(current_window.width + tab_width + 0.008, 0.03, temp_x - tab_width - 0.004, temp_y - 0.004 - 0.03, cursor_pos) then
+            if get_overlap_with_rect(current_window.width + 0.008, 0.03, temp_x - 0.004, temp_y - 0.004 - 0.03, cursor_pos) then
                 if PAD.IS_CONTROL_JUST_PRESSED(2, 18) then
                     current_window.is_being_dragged = true
                 end
@@ -448,9 +440,7 @@ UI.new = function()
             end
         end
 
-        temp_y = temp_y + 0.03
-
-        draw_container(current_window.elements)
+        draw_container(current_window.active_container)
 
         temp_container = {}
         current_window = {}
@@ -462,8 +452,7 @@ UI.new = function()
             if windows[hash] ~= nil then
                 current_window = windows[hash]
                 current_window.open_containers = {}
-                current_window.elements = {}
-                current_window.active_container = {}
+                current_window.active_container = container.new()
                 current_window.horizontal = false
                 current_window.width = sizex + 0.02
                 current_window.height = sizey + 0.02
@@ -479,14 +468,63 @@ UI.new = function()
                     title = title,
                     horizontal = false,
                     open_containers = {},
-                    elements = {},
-                    active_container = {},
+                    active_container = container.new(),
                     is_being_dragged = false,
                     id = hash
                 }
                 windows[hash] = current_window
             end
-        current_window.active_container = current_window.elements
+    end
+
+    --finish and draw the window
+    self.finish = function()
+            directx.draw_rect(
+                temp_x - 0.005,
+                temp_y - 0.005,
+                current_window.width + 0.01,
+                current_window.height + 0.01,
+                highlight_colour
+            )
+            directx.draw_rect(
+                temp_x - 0.004,
+                temp_y - 0.004,
+                current_window.width + 0.008,
+                current_window.height + 0.008,
+                background_colour
+            )
+            directx.draw_rect(temp_x - 0.004, temp_y - 0.004, current_window.width + 0.008, 0.03, gray_colour)
+    
+            directx.draw_text(
+                temp_x + current_window.width * 0.5,
+                temp_y,
+                current_window.title,
+                ALIGN_TOP_CENTRE,
+                .6,
+                text_colour,
+                false
+            )
+    
+            if cursor_mode then
+                if get_overlap_with_rect(current_window.width + 0.008, 0.03, temp_x, temp_y, cursor_pos) then
+                    if PAD.IS_CONTROL_JUST_PRESSED(2, 18) then
+                        current_window.is_being_dragged = true
+                    end
+                end
+                if PAD.IS_CONTROL_JUST_RELEASED(2, 18) then
+                    current_window.is_being_dragged = false
+                end
+    
+                if current_window.is_being_dragged then
+                    current_window.x = cursor_pos.x - current_window.width * 0.5
+                    current_window.y = cursor_pos.y - 0.03 * 0.5
+                end
+            end
+    
+            temp_y = temp_y + 0.03
+    
+            draw_container(current_window.active_container)
+            temp_container = {}
+            current_window = {}
     end
 
     --add a text element to the current window
@@ -494,8 +532,10 @@ UI.new = function()
         text = tostring(text)
         local width, height = directx.get_text_size(text, plain_text_size)
         add_with_and_height(width, height, current_window.horizontal)
-        current_window.active_container[#current_window.active_container + 1] = {
-            [draw_text] = {text = text, width = width, height = height, colour = colour}
+        current_window.active_container.elements[#current_window.active_container.elements + 1] = {
+            data = {text = text, width = width, height = height, colour = colour},
+            func = draw_text,
+            type = 'E'
         }
     end
 
@@ -504,14 +544,20 @@ UI.new = function()
         text = tostring(text)
         local width, height = directx.get_text_size(text, subhead_text_size)
         add_with_and_height(width, height, current_window.horizontal)
-        current_window.active_container[#current_window.active_container + 1] = {
-            [draw_subhead] = {text = text, width = width, height = height, colour = colour}
+        current_window.active_container.elements[#current_window.active_container.elements + 1] = {
+            data = {text = text, width = width, height = height, colour = colour},
+            func = draw_subhead,
+            type = 'E'
         }
     end
 
     --add a divider to the current window
     self.divider = function(colour)
-        current_window.active_container[#current_window.active_container + 1] = {[draw_div] = {colour = colour}}
+        current_window.active_container.elements[#current_window.active_container.elements + 1] = {
+            data = {colour = colour},
+            func = draw_div,
+            type = 'E'
+        }
         add_with_and_height(0.01, 0.02, current_window.horizontal)
     end
 
@@ -523,8 +569,8 @@ UI.new = function()
         local value_x = directx.get_text_size(value, plain_text_size)
         local total_x = value_x + name_x
         add_with_and_height(total_x, name_y, current_window.horizontal)
-        current_window.active_container[#current_window.active_container + 1] = {
-            [draw_label] = {
+        current_window.active_container.elements[#current_window.active_container.elements + 1] = {
+            data = {
                 name = name,
                 value = value,
                 name_width = name_x,
@@ -532,7 +578,9 @@ UI.new = function()
                 height = name_y,
                 colour = colour,
                 highlight_colour = label_highlight_colour
-            }
+            },
+            func = draw_label,
+            type = 'E'
         }
     end
 
@@ -566,14 +614,16 @@ UI.new = function()
                 end
             end
         end
-        current_window.active_container[#current_window.active_container + 1] = {
-            [draw_button] = {
+        current_window.active_container.elements[#current_window.active_container.elements + 1] = {
+            data = {
                 text = name,
                 width = name_width,
                 height = name_height,
                 colour = colour or highlight_colour,
                 padding = padding
-            }
+            },
+            func = draw_button,
+            type = 'E'
         }
         add_with_and_height(name_width + (padding * 3), name_height, current_window.horizontal)
         return clicked
@@ -614,8 +664,8 @@ UI.new = function()
                 end
             end
         end
-        current_window.active_container[#current_window.active_container + 1] = {
-            [draw_toggle] = {
+        current_window.active_container.elements[#current_window.active_container.elements + 1] = {
+            data = {
                 text = name,
                 width = name_width,
                 height = name_height,
@@ -623,7 +673,9 @@ UI.new = function()
                 button_size = button_size,
                 padding = padding,
                 state = state
-            }
+            },
+            func = draw_toggle,
+            type = 'E'
         }
         add_with_and_height(name_width + button_size.x + padding, button_size.y + padding, current_window.horizontal)
         return state
@@ -635,81 +687,25 @@ UI.new = function()
             error("new horizontal started without closing previous horizontal", 2)
         end
         current_window.open_containers[#current_window.open_containers + 1] = current_window.active_container
-        temp_container = {[enable_horizontal] = {}}
-        current_window.active_container = temp_container[enable_horizontal]
+        temp_container = container.new()
+        temp_container.func = enable_horizontal
+        current_window.active_container = temp_container
         current_window.horizontal = true
     end
 
     --return to drawing in the diagonal direction
     self.end_horizontal = function()
-        current_window.active_container[#current_window.active_container + 1] = {
-            [disable_horizontal] = {width = horizontal_temp_width, height = horizontal_temp_height}
+        current_window.active_container.elements[#current_window.active_container.elements + 1] = {
+            data = {width = horizontal_temp_width, height = horizontal_temp_height},
+            func = disable_horizontal,
+            type = 'E'
         }
         current_window.horizontal = false
         add_with_and_height(horizontal_temp_width, horizontal_temp_height, current_window.horizontal)
         local parent = current_window.open_containers[#current_window.open_containers]
-        parent[#parent + 1] = temp_container
+        parent.elements[#parent.elements+1] = temp_container
         current_window.active_container = parent
         horizontal_temp_width, horizontal_temp_height = 0, 0
     end
-
-    --finish and draw the window
-    self.finish = function()
-        directx.draw_rect(
-            temp_x - 0.005,
-            temp_y - 0.005,
-            current_window.width + 0.01,
-            current_window.height + 0.01,
-            highlight_colour
-        )
-        directx.draw_rect(
-            temp_x - 0.004,
-            temp_y - 0.004,
-            current_window.width + 0.008,
-            current_window.height + 0.008,
-            background_colour
-        )
-        directx.draw_rect(temp_x - 0.004, temp_y - 0.004, current_window.width + 0.008, 0.03, gray_colour)
-
-        directx.draw_text(
-            temp_x + current_window.width * 0.5,
-            temp_y,
-            current_window.title,
-            ALIGN_TOP_CENTRE,
-            .6,
-            text_colour,
-            false
-        )
-
-        if cursor_mode then
-            if get_overlap_with_rect(current_window.width + 0.008, 0.03, temp_x, temp_y, cursor_pos) then
-                if PAD.IS_CONTROL_JUST_PRESSED(2, 18) then
-                    current_window.is_being_dragged = true
-                end
-            end
-            if PAD.IS_CONTROL_JUST_RELEASED(2, 18) then
-                current_window.is_being_dragged = false
-            end
-
-            if current_window.is_being_dragged then
-                current_window.x = cursor_pos.x - current_window.width * 0.5
-                current_window.y = cursor_pos.y - 0.03 * 0.5
-            end
-        end
-
-        temp_y = temp_y + 0.03
-
-        draw_container(current_window.elements)
-
-        temp_container = {}
-        current_window = {}
-    end
-
     return self
 end
-
-
-
-
-
-
