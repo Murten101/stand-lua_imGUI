@@ -44,8 +44,8 @@ menu.toggle(menu.my_root(), "UI demo", {"UIdemo"}, "epic UI demo",
             myUI.finish()
 -- #endregion
 
--- #region tabbed window
-            tabs = {
+--#region tabbed window
+            local tabs = {
                 [1] = { 
                     data = {
                         title = "self",
